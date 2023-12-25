@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="4a7a1ae5-7718-44f2-9841-1c2c92741cdc" name="302server11-vpn">
+        <fileTransfer rootFolder="/home/yfy" accessType="SFTP" host="10.214.192.11" port="5022" sshConfigId="f475d7d7-ad1f-4cd5-986f-ac26f4a8f9b0" sshConfig="yfy@10.214.192.11:5022 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
