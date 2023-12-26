@@ -1,40 +1,58 @@
-import torch
 import random
+import time
+
+import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
-class Server():
+
+from client import Client
+
+
+class Server:
     def __init__(
         self,
-        global_model,
-        clients,
-        communication_rounds,
-        join_ratio,
-        batch_size,
-        model_epochs,
-        eval_gap,
-        testset,
-        device,
+        global_model: nn.Module,
+        clients: list[Client],
+        # --- model training params ---
+        communication_rounds: int,
+        join_ratio: float,
+        batch_size: int,
+        model_epochs: int,
+        # --- test and evaluation information ---
+        eval_gap: int,
+        test_set: object,
+        test_loader: DataLoader,
+        device: torch.device,
     ):
-        super(self, Server).__init__()
-        self.global_model = global_model
+        self.global_model = global_model.to(device)
         self.clients = clients
+
         self.communication_rounds = communication_rounds
         self.join_ratio = join_ratio
         self.batch_size = batch_size
         self.model_epochs = model_epochs
+
         self.eval_gap = eval_gap
-        self.testset = testset
+        self.test_set = test_set
+        self.test_loader = test_loader
         self.device = device
+
     def fit(self):
-        for round in range(self.communication_rounds):
+        for rounds in range(self.communication_rounds):
             # evaluate the model and make checkpoint
-            if round % self.eval_gap == 0:
-                self.evaluate()
+            print(f' ====== round {rounds} ======')
+            if rounds % self.eval_gap == 0:
+                acc = self.evaluate()
+                print(f'round {rounds} evaluation: test acc is {acc}')
+
+            start_time = time.time()
 
             # select client and train clients, number of synthetic images = # clients(10) * classes(10) * ipc(10)
             synthetic_data = []
             synthetic_label = []
             selected_clients = self.select_clients()
             for client in selected_clients:
+                client.recieve_model(self.global_model)
                 imgs, labels = client.train()
                 synthetic_data.append(imgs)
                 synthetic_label.append(labels)
@@ -65,13 +83,13 @@ class Server():
         self.global_model.eval()
         with torch.no_grad():
             correct, total = 0, 0
-            test_dataloader = DataLoader(self.testset, 256, shuffle=True, num_workers=4)
-            for x, target in test_dataloader:
+            for x, target in self.test_loader:
                 x, target = x.to(self.device), target.to(self.device, dtype=torch.int64)
                 pred = self.global_model(x)
                 _, pred_label = torch.max(pred.data, 1)
                 total += x.data.size()[0]
                 correct += (pred_label == target.data).sum().item()
+
         return correct / float(total)
 
     def make_checkpoint(self, round):

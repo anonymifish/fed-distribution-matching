@@ -1,29 +1,41 @@
-import torch
 import copy
 
+import torch
+
+from data.dataset import PerLabelDatasetNonIID
 from utils import sample_random_model
 
-class Client():
+
+class Client:
     def __init__(
         self,
-        id,
-        trainset,
-        classes,
-        dc_iterations,
-        dataset_info,
-        ipc,
-        rho,
-        real_batch_size,
-        image_lr,
-        device
+        cid: int,
+        # --- dataset information ---
+        train_set: PerLabelDatasetNonIID,
+        classes: list[int],
+        dataset_info: dict,
+        # --- data condensation params ---
+        ipc: int,
+        rho: float,
+        dc_iterations: int,
+        real_batch_size: int,
+        image_lr: float,
+        device: torch.device,
     ):
-        self.id = id,
-        self.trainset = trainset,
+        self.cid = cid,
+
+        self.train_set = train_set,
         self.classes = classes,
-        self.dc_iterations = dc_iterations
         self.dataset_info = dataset_info
+
         self.ipc = ipc
+        self.rho = rho
+        self.dc_iterations = dc_iterations
+        self.real_batch_size = real_batch_size
+        self.image_lr = image_lr
+
         self.device = device
+
         self.synthetic_images = torch.randn(
             size=(
                 len(classes)*ipc,
@@ -35,9 +47,6 @@ class Client():
             requires_grad=True,
             device=self.device
         )
-        self.rho = rho
-        self.real_batch_size = real_batch_size
-        self.image_lr = image_lr
 
     def train(self):
         # initialize S_k from real examples and initialize optimizer
@@ -75,4 +84,4 @@ class Client():
         return copy.deepcopy(self.synthetic_images.detach()), synthetic_labels
 
     def recieve_model(self, global_model):
-        self.global_model = copy.deepcopy(global_model)
+        self.global_model = copy.deepcopy(global_model).cpu()

@@ -1,7 +1,17 @@
 import copy
+import random
 
+import numpy as np
 import torch
 from torch.distributions.multivariate_normal import MultivariateNormal
+
+
+def setup_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.deterministic = True
 
 def sample_random_model(model, rho):
     new_model = copy.deepcopy(model)
