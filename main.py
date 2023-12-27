@@ -18,6 +18,8 @@ from utils import setup_seed
 def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1"
     args = parser.parse_args()
+    split_file = f'/{args.dataset}_client_num={args.client_num}_alpha={args.alpha}.json'
+    args.split_file = os.path.join(os.path.dirname(__file__), "./dataset/split_file", split_file)
 
     # set seeds and parse args, init wandb
     mode = "disabled" if args.debug else "online"
@@ -74,6 +76,8 @@ def main():
         device=device,
     ) for i in range(args.client_num)]
 
+    model_identification = f'{args.dataset}_alpha{args.alpha}_{args.client_num}clients/{args.model}_{args.ipc}ipc_{args.dc_iterations}dc_{args.model_epochs}epochs'
+
     server = Server(
         global_model=global_model,
         clients=client_list,
@@ -85,6 +89,7 @@ def main():
         test_set=test_set,
         test_loader=test_loader,
         device=device,
+        model_identification=model_identification,
     )
     print('Server and Clients have been created.')
 

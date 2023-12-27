@@ -74,7 +74,7 @@ def partition(args):
     print('Data statistics: %s' % str(net_cls_counts))
 
     save_path = os.path.join(os.path.dirname(__file__), '../', 'split_file')
-    file_name = 'f../{args.dataset}_client_num={args.client_num}_alpha={args.alpha}.json'
+    file_name = 'f{args.dataset}_client_num={args.client_num}_alpha={args.alpha}.json'
     os.makedirs(save_path, exist_ok=True)
     with open(os.path.join(save_path, file_name), 'w') as json_file:
         json.dump([dict_users[i].to_list() for i in range(args.client_num)], json_file, indent=4)
