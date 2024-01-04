@@ -7,8 +7,9 @@ import torch
 import torch.nn as nn
 import wandb
 from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
 
-from client import Client
+from src.client import Client
 
 
 class Server:
@@ -62,7 +63,7 @@ class Server:
             synthetic_data = []
             synthetic_label = []
             selected_clients = self.select_clients()
-            print('selected clients:', selected_clients)
+            print('selected clients:', [selected_client.cid for selected_client in selected_clients])
             for client in selected_clients:
                 client.recieve_model(self.global_model)
                 imgs, labels = client.train()
@@ -87,9 +88,10 @@ class Server:
             loss_function = torch.nn.CrossEntropyLoss()
 
             total_loss = 0
-            for epoch in range(self.model_epochs):
+            for epoch in tqdm(range(self.model_epochs), desc='global model training', leave=True):
                 for x, target in synthetic_dataloader:
                     x, target = x.to(self.device), target.to(self.device)
+                    target = target.long()
                     pred = self.global_model(x)
                     loss = loss_function(pred, target)
                     model_optimizer.zero_grad()
@@ -108,7 +110,7 @@ class Server:
             save_root_path = os.path.join(os.path.dirname(__file__), '../results/')
             save_root_path = os.path.join(save_root_path, self.model_identification, 'net')
             os.makedirs(save_root_path, exist_ok=True)
-            self.save_model(path=save_root_path, include_image=False)
+            self.save_model(path=save_root_path, rounds=rounds, include_image=False)
 
     def select_clients(self):
         return (

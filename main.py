@@ -8,18 +8,18 @@ import torch
 import wandb
 from torch.utils.data import Subset
 
-from client import Client
-from server import Server
+from src.client import Client
+from src.server import Server
 from config import parser
 from dataset.data.dataset import get_dataset, PerLabelDatasetNonIID
-from models import ResNet18, ConvNet
-from utils import setup_seed
+from src.models import ResNet18, ConvNet
+from src.utils import setup_seed
 
 def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1"
     args = parser.parse_args()
     split_file = f'/{args.dataset}_client_num={args.client_num}_alpha={args.alpha}.json'
-    args.split_file = os.path.join(os.path.dirname(__file__), "./dataset/split_file", split_file)
+    args.split_file = os.path.join(os.path.dirname(__file__), "dataset/split_file"+split_file)
 
     # set seeds and parse args, init wandb
     mode = "disabled" if args.debug else "online"
@@ -34,8 +34,10 @@ def main():
 
     # get dataset and init models
     dataset_info, train_set, test_set, test_loader = get_dataset(args.dataset, args.dataset_root, args.batch_size)
-    with open(args.split_file) as file:
-        client_indices, client_classes = json.load(file)
+    with open(args.split_file, 'r') as file:
+        file_data = json.load(file)
+    client_indices, client_classes = file_data['client_idx'], file_data['client_classes']
+
     train_sets = [Subset(train_set, indices) for indices in client_indices]
 
     if args.model == "ConvNet":

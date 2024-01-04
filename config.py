@@ -2,9 +2,9 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--debug", type=bool, default=True)
+parser.add_argument("--debug", type=bool, default=False)
 parser.add_argument("--seed", type=int, default=19260817)
-parser.add_argument("--device", type=str, default="cuda:0")
+parser.add_argument("--device", type=str, default="cuda:1")
 
 parser.add_argument("--dataset_root", type=str, default="/home/yfy/datasets/torchvision")
 parser.add_argument("--split_file", type=str, default="")

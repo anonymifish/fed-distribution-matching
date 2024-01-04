@@ -59,11 +59,10 @@ class PerLabelDatasetNonIID():
         self.images_all = [torch.unsqueeze(dst_train[i][0], dim=0) for i in range(len(dst_train))]
         labels_all = [dst_train[i][1] for i in range(len(dst_train))]
         for i, lab in enumerate(labels_all):
-            lab = lab.item()
             if lab not in classes:
                 continue
             self.indices_class[lab].append(i)
-        self.images_all = torch.cat(self.images_all, dim=0).cuda()
+        self.images_all = torch.cat(self.images_all, dim=0).to(device)
         labels_all = torch.tensor(labels_all, dtype=torch.long, device=device)
 
     def __len__(self):

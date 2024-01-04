@@ -5,10 +5,8 @@ import os
 import numpy as np
 from torchvision import datasets, transforms
 
-
 def partition(args):
-    # set seeds: TODO
-    # raise NotImplemented("set seeds")
+    np.random.seed(args.seed)
 
     # prepare datasets for then partition latter
     if args.dataset == 'MNIST':
@@ -69,16 +67,18 @@ def partition(args):
         net_cls_counts[net_i] = tmp
         for c, cnt in tmp.items():
             if cnt >= 10:
-                dict_classes[net_i].append(c)
+                dict_classes[net_i].append(int(c))
 
     print('Data statistics: %s' % str(net_cls_counts))
 
     save_path = os.path.join(os.path.dirname(__file__), '../', 'split_file')
-    file_name = 'f{args.dataset}_client_num={args.client_num}_alpha={args.alpha}.json'
+    file_name = f'{args.dataset}_client_num={args.client_num}_alpha={args.alpha}.json'
     os.makedirs(save_path, exist_ok=True)
     with open(os.path.join(save_path, file_name), 'w') as json_file:
-        json.dump([dict_users[i].to_list() for i in range(args.client_num)], json_file, indent=4)
-        json.dump([dict_classes[i].to_list() for i in range(args.client_num)], json_file, indent=4)
+        json.dump({
+            "client_idx": [dict_users[i] for i in range(args.client_num)],
+            "client_classes": [dict_classes[i] for i in range(args.client_num)],
+        }, json_file, indent=4)
 
 if __name__ == "__main__":
     partition_parser = argparse.ArgumentParser()
@@ -87,6 +87,6 @@ if __name__ == "__main__":
     partition_parser.add_argument("--client_num", type=int, default=10)
     partition_parser.add_argument("--alpha", type=float, default=0.5)
     partition_parser.add_argument("--dataset_root", type=str, default='/home/yfy/datasets/torchvision')
-
+    partition_parser.add_argument("--seed", type=int, default=19260817)
     args = partition_parser.parse_args()
     partition(args)

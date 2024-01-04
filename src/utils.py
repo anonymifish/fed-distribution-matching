@@ -30,3 +30,24 @@ def sample_random_model(model, rho):
             old_param.fill_(new_param)
 
     return new_model
+
+def random_pertube(model, rho):
+    new_model = copy.deepcopy(model)
+    for p in new_model.parameters():
+        gauss = torch.normal(mean=torch.zeros_like(p), std=1)
+        if p.grad is None:
+            p.grad = gauss
+        else:
+            p.grad.data.copy_(gauss.data)
+
+    norm = torch.norm(torch.stack([p.grad.norm(p=2) for p in new_model.parameters() if p.grad is not None]), p=2)
+
+    with torch.no_grad():
+        scale = rho / (norm + 1e-12)
+        scale = torch.clamp(scale, max=1.0)
+        for p in new_model.parameters():
+            if p.grad is not None:
+                e_w = 1.0 * p.grad * scale.to(p)
+                p.add_(e_w)
+
+    return new_model
